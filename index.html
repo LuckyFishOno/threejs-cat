@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101112" />
+    <script>
+      // Pick theme and language before first paint: saved choice, else daylight and Chinese.
+      (() => { let t; try { t = localStorage.getItem('felis-theme'); } catch {}
+        document.documentElement.dataset.theme = t === 'dark' ? 'dark' : 'light';
+        let l; try { l = localStorage.getItem('felis-lang'); } catch {}
+        document.documentElement.lang = l === 'en' ? 'en' : 'zh-Hant'; })();
+    </script>
+    <title>FELIS — 貓科步態研究</title>
+  </head>
+  <body>
+    <main id="app">
+      <div id="viewport" data-i18n-label="viewport" aria-label="可拖曳旋轉的貓咪跑步線框模型"></div>
+      <div class="corner-controls"><button id="lang" class="theme-toggle" type="button"></button><button id="theme" class="theme-toggle" type="button"></button></div>
+      <nav class="keyframes" data-i18n-label="keyframes" aria-label="關鍵姿態"><button data-phase="0.029" data-i18n="key1">01 全速伸展</button><button data-phase="0.28" data-i18n="key2">02 前肢承重</button><button data-phase="0.50" data-i18n="key3">03 收腹騰空</button><button data-phase="0.72" data-i18n="key4">04 後肢推蹬</button></nav>
+      <div class="hint" data-i18n="hint">拖曳旋轉 · 滾輪縮放</div>
+      <footer class="controls">
+        <div class="transport"><button id="play" aria-label="暫停">Ⅱ</button></div>
+        <label class="phase-control"><span><span data-i18n="phase">步態週期</span> <output id="phase-value">00%</output></span><input id="phase" type="range" min="0" max="1" step="0.0001" value="0" data-i18n-label="phaseLabel" aria-label="步態週期，拖動時暫停" /></label>
+        <label class="speed-control"><span><span data-i18n="speed">播放速度</span> <output id="speed-value">1.00×</output></span><input id="speed" type="range" min="0.1" max="1.6" step="0.05" value="1" data-i18n-label="speed" aria-label="播放速度" /></label>
+        <div class="view-controls" role="group" data-i18n-label="views" aria-label="觀察角度"><button data-view="side" class="active" data-i18n="side">側面</button><button data-view="three" data-i18n="three">立體</button><button data-view="front" data-i18n="front">正面</button></div>
+        <div class="toggles"><label class="toggle"><input id="skeleton" type="checkbox" /><span data-i18n="skeleton">顯示骨架</span></label><label class="toggle"><input id="xray" type="checkbox" /><span data-i18n="xray">透視線框</span></label></div>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
