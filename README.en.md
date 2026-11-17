@@ -2,8 +2,6 @@
 
 [中文](README.md) · **English**
 
-A Three.js study of a domestic cat at full gallop: a short-haired black cat drawn as a single-colour triangle wireframe.
-
 ## Run
 
 ```bash
