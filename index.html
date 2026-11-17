@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#101112" />
     <script>
       // Pick theme and language before first paint: saved choice, else daylight and Chinese.
-      (() => { let t; try { t = localStorage.getItem('felis-theme'); } catch {}
+      (() => { let t; try { t = localStorage.getItem('cat-theme'); } catch {}
         document.documentElement.dataset.theme = t === 'dark' ? 'dark' : 'light';
-        let l; try { l = localStorage.getItem('felis-lang'); } catch {}
+        let l; try { l = localStorage.getItem('cat-lang'); } catch {}
         document.documentElement.lang = l === 'en' ? 'en' : 'zh-Hant'; })();
     </script>
-    <title>FELIS — 貓科步態研究</title>
+    <title>貓咪步態</title>
   </head>
   <body>
     <main id="app">

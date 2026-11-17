@@ -32,7 +32,7 @@ ground.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(groun
 // Chinese and English interface text. Keys match data-i18n / data-i18n-label in index.html.
 const STRINGS = {
   'zh-Hant': {
-    title: 'FELIS — 貓科步態研究', viewport: '可拖曳旋轉的貓咪跑步線框模型', keyframes: '關鍵姿態',
+    title: '貓咪步態', viewport: '可拖曳旋轉的貓咪跑步線框模型', keyframes: '關鍵姿態',
     key1: '01 全速伸展', key2: '02 前肢承重', key3: '03 收腹騰空', key4: '04 後肢推蹬',
     hint: '拖曳旋轉 · 滾輪縮放', phase: '步態週期', phaseLabel: '步態週期，拖動時暫停', speed: '播放速度',
     views: '觀察角度', side: '側面', three: '立體', front: '正面', skeleton: '顯示骨架', xray: '透視線框',
@@ -42,7 +42,7 @@ const STRINGS = {
     walk1: '01 左後落地', walk2: '02 左前落地', walk3: '03 右後落地', walk4: '04 右前落地',
   },
   en: {
-    title: 'FELIS — Feline Gait Study', viewport: 'Wireframe model of a galloping cat; drag to rotate', keyframes: 'Key poses',
+    title: 'Cat Gaits', viewport: 'Wireframe model of a galloping cat; drag to rotate', keyframes: 'Key poses',
     key1: '01 Extension', key2: '02 Fore stance', key3: '03 Gathered flight', key4: '04 Hind push-off',
     hint: 'Drag to rotate · Scroll to zoom', phase: 'Gait cycle', phaseLabel: 'Gait cycle; dragging pauses playback', speed: 'Speed',
     views: 'View', side: 'Side', three: '3/4', front: 'Front', skeleton: 'Skeleton', xray: 'X-ray',
@@ -64,7 +64,7 @@ function applyLanguage(lang) {
 }
 langButton.addEventListener('click', () => {
   const next = document.documentElement.lang === 'en' ? 'zh-Hant' : 'en';
-  try { localStorage.setItem('felis-lang', next); } catch {}
+  try { localStorage.setItem('cat-lang', next); } catch {}
   applyLanguage(next);
   applyTheme(document.documentElement.dataset.theme);
   setPlaying(playing);
@@ -92,7 +92,7 @@ function applyTheme(name) {
 applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 themeButton.addEventListener('click', () => {
   const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-  try { localStorage.setItem('felis-theme', next); } catch {}
+  try { localStorage.setItem('cat-theme', next); } catch {}
   applyTheme(next);
 });
 
@@ -138,7 +138,7 @@ function setGait(name) {
 document.querySelectorAll('[data-gait]').forEach((button) => button.addEventListener('click', () => setGait(button.dataset.gait)));
 setView('side');
 // Dev-only handle for close-up inspection of the model from the console.
-if (import.meta.env.DEV) window.__felis = { camera, orbit, rig, renderer, setPhase: (p) => { setPlaying(false); phase = p; }, setGait: (g) => setGait(g) };
+if (import.meta.env.DEV) window.__cat = { camera, orbit, rig, renderer, setPhase: (p) => { setPlaying(false); phase = p; }, setGait: (g) => setGait(g) };
 const controlsBar = document.querySelector('.controls');
 new ResizeObserver(() => {
   const top = viewport.getBoundingClientRect().bottom - controlsBar.getBoundingClientRect().top;

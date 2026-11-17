@@ -1,6 +1,10 @@
-# FELIS / Motion Study 011
+# 貓咪步態
 
 **中文** · [English](README.en.md)
+
+![跑步](docs/screenshots/gallop-zh.png)
+
+![走路](docs/screenshots/walk-zh.png)
 
 ## 執行
 

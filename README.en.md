@@ -1,6 +1,10 @@
-# FELIS / Motion Study 011
+# Cat Gaits
 
 [中文](README.md) · **English**
+
+![Gallop](docs/screenshots/gallop-en.png)
+
+![Walk](docs/screenshots/walk-en.png)
 
 ## Run
 
