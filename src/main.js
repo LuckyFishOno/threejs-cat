@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { wrap, STRIDE, CYCLE_HZ, gaitStage } from './gait.js';
+import { wrap } from './gait.js';
+import { GAITS } from './gaits.js';
 import { createCat } from './cat-rig.js';
 import { materials } from './wire-geometry.js';
 import './style.css';
@@ -37,6 +38,8 @@ const STRINGS = {
     views: '觀察角度', side: '側面', three: '立體', front: '正面', skeleton: '顯示骨架', xray: '透視線框',
     pause: '暫停', play: '播放', toLight: '日光模式', toDark: '深色模式', toLightLabel: '切換到日光模式', toDarkLabel: '切換到深色模式',
     lang: 'EN', langLabel: 'Switch to English',
+    gaits: '步態', walk: '走路', gallop: '跑步',
+    walk1: '01 左後落地', walk2: '02 左前落地', walk3: '03 右後落地', walk4: '04 右前落地',
   },
   en: {
     title: 'FELIS — Feline Gait Study', viewport: 'Wireframe model of a galloping cat; drag to rotate', keyframes: 'Key poses',
@@ -45,6 +48,8 @@ const STRINGS = {
     views: 'View', side: 'Side', three: '3/4', front: 'Front', skeleton: 'Skeleton', xray: 'X-ray',
     pause: 'Pause', play: 'Play', toLight: 'Light', toDark: 'Dark', toLightLabel: 'Switch to light mode', toDarkLabel: 'Switch to dark mode',
     lang: '中文', langLabel: '切換到中文',
+    gaits: 'Gait', walk: 'Walk', gallop: 'Gallop',
+    walk1: '01 Left hind down', walk2: '02 Left fore down', walk3: '03 Right hind down', walk4: '04 Right fore down',
   },
 };
 const tr = (key) => STRINGS[document.documentElement.lang === 'en' ? 'en' : 'zh-Hant'][key];
@@ -119,9 +124,21 @@ function setView(view) {
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
 orbit.addEventListener('start', () => document.querySelectorAll('[data-view]').forEach((button) => button.classList.remove('active')));
 document.querySelectorAll('[data-phase]').forEach(button => button.addEventListener('click', () => { setPlaying(false); phase=Number(button.dataset.phase); }));
+// Walk or gallop. The key-pose buttons follow the chosen gait.
+let gait = 'gallop';
+function setGait(name) {
+  gait = name;
+  document.querySelectorAll('[data-gait]').forEach((button) => button.classList.toggle('active', button.dataset.gait === name));
+  document.querySelectorAll('[data-phase]').forEach((button, i) => {
+    const [p, key] = GAITS[name].keyframes[i];
+    button.dataset.phase = p; button.dataset.i18n = key; button.textContent = tr(key);
+  });
+  lastPhase = NaN;
+}
+document.querySelectorAll('[data-gait]').forEach((button) => button.addEventListener('click', () => setGait(button.dataset.gait)));
 setView('side');
 // Dev-only handle for close-up inspection of the model from the console.
-if (import.meta.env.DEV) window.__felis = { camera, orbit, rig, renderer, setPhase: (p) => { setPlaying(false); phase = p; } };
+if (import.meta.env.DEV) window.__felis = { camera, orbit, rig, renderer, setPhase: (p) => { setPlaying(false); phase = p; }, setGait: (g) => setGait(g) };
 const controlsBar = document.querySelector('.controls');
 new ResizeObserver(() => {
   const top = viewport.getBoundingClientRect().bottom - controlsBar.getBoundingClientRect().top;
@@ -144,14 +161,15 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
   if (playing) {
-    const advance = dt * speed * CYCLE_HZ;
+    const advance = dt * speed * GAITS[gait].CYCLE_HZ;
     phase = wrap(phase + advance);
-    distance += advance * STRIDE;
+    distance += advance * GAITS[gait].STRIDE;
     ground.position.x = -(distance % 0.42);
   }
   if(phase!==lastPhase||rig.skeleton.visible!==lastBones){
-  rig.pose(phase);
+  rig.pose(phase,gait);
   lastPhase=phase;lastBones=rig.skeleton.visible;
+  const {gaitStage}=GAITS[gait];
   const label=gaitStage(phase);
   phaseButtons.forEach(button => {
     const p=Number(button.dataset.phase);

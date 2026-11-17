@@ -27,3 +27,5 @@
 /* Language and theme switches live in the top-right corner. */
 .corner-controls{position:absolute;top:28px;right:44px;display:flex;gap:8px}
 @media(max-width:850px){.corner-controls{top:16px;right:16px}}
+/* Walk / gallop switch beside the play button. */
+.controls .gait-controls{position:static;flex:none}

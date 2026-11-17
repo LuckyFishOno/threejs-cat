@@ -70,3 +70,20 @@ test('head keeps a cat silhouette: broad cheeks, short muzzle and upright mirror
   const left=ears.filter(p=>p[2]>0),base=left.filter(p=>p[1]<crown);
   assert.ok(span(base,2)>rise*.75,'ear base is too narrow for its height');
 });
+
+test('the neck keeps some length between the last ribcage loop and the back of the head in every gait',async()=>{
+  const {GAITS}=await import('../src/gaits.js');
+  const {HEAD_SCALE}=await import('../src/cat-surface.js');
+  const {headLoops}=await import('../src/head-shape.js');
+  // Rear loop of the head: its axis point and roughly its radius, in the head frame.
+  const [ax,ay]=headLoops[0].map(v=>v*HEAD_SCALE),radius=.13*HEAD_SCALE;
+  for(const gait of Object.values(GAITS)) for(let i=0;i<400;i++) {
+    const spine=gait.spinePose(i/400),{head,pitch}=gait.headNeckPose(i/400,spine);
+    // The trunk's last loop stands upright 0.36 of the way along the final spine link.
+    const loop=spine[7].x+.36*(spine[8].x-spine[7].x);
+    for(const edge of [-1,1]) {
+      const gap=head.x+ax*Math.cos(pitch)-(ay+edge*radius)*Math.sin(pitch)-loop;
+      assert.ok(gap>.03,`neck only ${gap} long at ${i/400}`);
+    }
+  }
+});

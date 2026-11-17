@@ -1,8 +1,7 @@
 import {createSurface} from './cat-surface.js';
-import {headNeckPose} from './head-neck.js';
 import * as THREE from 'three';
-import { spinePose, legPose, bodySway, TAU } from './gait.js';
-import { tailPose } from './tail.js';
+import { TAU } from './gait.js';
+import { GAITS } from './gaits.js';
 import { materials, ellipsoid, ellipsoidBatch, scapula, line, updateLine, orient } from './wire-geometry.js';
 const v=(x,y,z=0)=>new THREE.Vector3(x,y,z);
 const vec=(p)=>v(p.x,p.y,p.z);
@@ -27,7 +26,9 @@ export function createCat(scene) {
     legs.push({front,side,blade,details,internalBones,bone,contact});
   }
 
-  function pose(phase) {
+  // `gait` names an entry of GAITS; every gait drives the same skin and skeleton.
+  function pose(phase,gait='gallop') {
+    const {spinePose,legPose,bodySway,headNeckPose,tailPose}=GAITS[gait];
     const spine=spinePose(phase).map(vec);
     const poses=legs.map(({front,side})=>({...legPose(phase,front,side,spine),front,side}));
     surface.update(spine,headNeckPose(phase,spine),tailPose(phase,spine),poses,bodySway(phase));

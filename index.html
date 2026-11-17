@@ -21,6 +21,7 @@
       <div class="hint" data-i18n="hint">拖曳旋轉 · 滾輪縮放</div>
       <footer class="controls">
         <div class="transport"><button id="play" aria-label="暫停">Ⅱ</button></div>
+        <div class="view-controls gait-controls" role="group" data-i18n-label="gaits" aria-label="步態"><button data-gait="walk" data-i18n="walk">走路</button><button data-gait="gallop" class="active" data-i18n="gallop">跑步</button></div>
         <label class="phase-control"><span><span data-i18n="phase">步態週期</span> <output id="phase-value">00%</output></span><input id="phase" type="range" min="0" max="1" step="0.0001" value="0" data-i18n-label="phaseLabel" aria-label="步態週期，拖動時暫停" /></label>
         <label class="speed-control"><span><span data-i18n="speed">播放速度</span> <output id="speed-value">1.00×</output></span><input id="speed" type="range" min="0.1" max="1.6" step="0.05" value="1" data-i18n-label="speed" aria-label="播放速度" /></label>
         <div class="view-controls" role="group" data-i18n-label="views" aria-label="觀察角度"><button data-view="side" class="active" data-i18n="side">側面</button><button data-view="three" data-i18n="three">立體</button><button data-view="front" data-i18n="front">正面</button></div>

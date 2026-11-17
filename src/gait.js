@@ -5,10 +5,10 @@ export const STRIDE = 4.00;
 export const CYCLE_HZ = 1.85;
 export const STANCE = 0.235;
 const rad = (degrees) => degrees * Math.PI / 180;
-const point = (x, y, z = 0) => ({ x, y, z });
-const add = (a, b) => point(a.x + b.x, a.y + b.y, a.z + b.z);
-const vector = (length, angle, z = 0) => point(length * Math.cos(angle), length * Math.sin(angle), z);
-const smoothstep = (x) => { const t=Math.max(0,Math.min(1,x)); return t*t*t*(t*(t*6-15)+10); };
+export const point = (x, y, z = 0) => ({ x, y, z });
+export const add = (a, b) => point(a.x + b.x, a.y + b.y, a.z + b.z);
+export const vector = (length, angle, z = 0) => point(length * Math.cos(angle), length * Math.sin(angle), z);
+export const smoothstep = (x) => { const t=Math.max(0,Math.min(1,x)); return t*t*t*(t*(t*6-15)+10); };
 // Bone lengths, in the same units as the spine (one vertebral link is 0.185).
 // The humerus matches the forearm and the hind limb is the longer of the two;
 // overall they are kept short so the legs read as a house cat's under the
@@ -52,8 +52,6 @@ export function limbLoad(phase, front, side) {
 // the hind legs, so the hip over a loaded hind leg is the higher one.
 // A positive roll lowers the cat's left side (+z).
 const SCAPULA_RISE = 0.034;
-const PELVIS_SHARE = [1, 1, 0.8, 0.45, 0.15, 0, 0, 0, 0];
-const SHOULDER_SHARE = [0, 0, 0, 0.15, 0.45, 0.8, 1, 1, 0];
 export function bodySway(phase) {
   const foreLoad = { [-1]: limbLoad(phase, true, -1), 1: limbLoad(phase, true, 1) };
   const fore = foreLoad[1] - foreLoad[-1];
@@ -62,36 +60,41 @@ export function bodySway(phase) {
   return { fore, hind, foreLoad, foreRoll: 0.075 * fore, hindRoll: -0.055 * hind, foreShift: 0.022 * fore, hindShift: 0.016 * hind };
 }
 // Fixed-length lumbar links bend; the last thoracic links stay aligned.
-export function spinePose(phase) {
-  const { flex, height, pitch } = bodyPose(phase);
+// `lateral(i)` is the sideways offset of vertebra i. Shared by every gait.
+export const SPINE_LINK = 0.185;
+export function buildSpine({ flex, height, pitch }, lateral = () => 0) {
   const open = [1.15,.95,.60,.10,-.40,-.60,-.60,-.60];
   const collected = [1.15,.65,.18,-.14,-.26,-.33,-.33,-.33];
   // Spread the bend from the pelvis into the loin before the ribcage catches
   // up. In extension the original eight link directions are unchanged.
   const tuck=smoothstep((flex-.20)/.55);
   const weights=open.map((a,i)=>a+(collected[i]-a)*tuck);
-  // The pelvis leans over a loaded hind foot and the shoulders over a loaded
-  // forefoot; the neck base returns to the midline so the head stays steady.
   // Each link keeps its length: what it spends sideways it loses in the
   // sagittal plane.
-  const sway = bodySway(phase);
-  const lateral = i => sway.hindShift * PELVIS_SHARE[i] + sway.foreShift * SHOULDER_SHARE[i];
   const spine = [point(0, height, lateral(0))];
   weights.forEach((weight, i) => {
     const dz = lateral(i + 1) - lateral(i), from = spine.at(-1);
-    const link = vector(Math.sqrt(0.185 * 0.185 - dz * dz), pitch + flex * weight * 0.75);
+    const link = vector(Math.sqrt(SPINE_LINK * SPINE_LINK - dz * dz), pitch + flex * weight * 0.75);
     spine.push(point(from.x + link.x, from.y + link.y, from.z + dz));
   });
   // Keep the sacrum on its authored fore/aft path: easing the spinal arch
   // must not pull the hip away from a planted hind paw.
-  const center = open.reduce((x,w)=>x+.185*Math.cos(pitch+flex*w*.75),0)*.5;
+  const center = open.reduce((x,w)=>x+SPINE_LINK*Math.cos(pitch+flex*w*.75),0)*.5;
   return spine.map((p) => point(p.x - center, p.y, p.z));
+}
+// The pelvis leans over a loaded hind foot and the shoulders over a loaded
+// forefoot; the neck base returns to the midline so the head stays steady.
+export const PELVIS_SHARE = [1, 1, 0.8, 0.45, 0.15, 0, 0, 0, 0];
+export const SHOULDER_SHARE = [0, 0, 0, 0.15, 0.45, 0.8, 1, 1, 0];
+export function spinePose(phase) {
+  const sway = bodySway(phase);
+  return buildSpine(bodyPose(phase), i => sway.hindShift * PELVIS_SHARE[i] + sway.foreShift * SHOULDER_SHARE[i]);
 }
 // Each swing is a cubic B-spline through control poses. The three controls at
 // either end continue the planted trajectory exactly, matching its velocity
 // and acceleration. The middle controls describe one unbroken recovery arc.
 const foreTouch = 0.95, hindTouch = -0.155;
-const padHeight = 0.055;
+export const padHeight = 0.055;
 function swingCurve(touch, releaseAngle, landingAngle, authored, reach, lift) {
   // Paths measured from the shoulder or hip scale with the limb's length;
   // paths drawn against the torso rise or sink with that end of the body.
@@ -157,27 +160,28 @@ export function legTiming(front, side) {
   // come down one well after the other; the hindfeet land closer together.
   return front ? (side === -1 ? FORE_LEAD : FORE_LEAD + FORE_GAP) : (side === -1 ? 0.69 : 0.59);
 }
-function limbAttachment(phase, front, side, spine, localPhase) {
-  const z = side * (front ? foreTrack : hindTrack).attachment;
-  const sway = bodySway(phase), roll = front ? sway.foreRoll : sway.hindRoll;
+// Shoulder (top of the scapula and the shoulder joint) or hip (sacrum and hip
+// joint), carried by that girdle's roll. Shared by every gait.
+export function attachLimb(front, side, spine, { roll, rise = 0, shoulderAngle = 0, pelvisPitch = 0, width, yaw = 0 }) {
+  const z = side * width;
   const cos = Math.cos(roll), sin = Math.sin(roll);
   // A point given relative to its spine anchor, carried by that girdle's roll.
+  // `yaw` is the girdle's heading towards the cat's left: it brings the right
+  // side's joint forward and the left side's back.
   const carried = (anchor, dx, dy, lift = 0) =>
-    point(anchor.x + dx, anchor.y + dy * cos - z * sin + lift, anchor.z + dy * sin + z * cos);
-  let pivot, base, shoulderAngle;
+    point(anchor.x + dx - z * Math.sin(yaw), anchor.y + dy * cos - z * sin + lift, anchor.z + dy * sin + z * cos);
   if (front) {
-    const anchor = spine[7];
-    shoulderAngle = -Math.PI/2 + shoulderCurve(localPhase)[0];
-    const blade = vector(0.325, shoulderAngle), rise = SCAPULA_RISE * sway.foreLoad[side];
-    pivot = carried(anchor, -0.075, 0.14, rise);
-    base = carried(anchor, -0.075 + blade.x, 0.14 + blade.y, rise);
-  } else {
-    const { pelvisPitch } = bodyPose(phase);
-    const pelvis = vector(0.135, -Math.PI/2+pelvisPitch);
-    pivot = carried(spine[0], 0, 0);
-    base = carried(spine[0], pelvis.x, pelvis.y);
+    const anchor = spine[7], blade = vector(0.325, shoulderAngle);
+    return { pivot: carried(anchor, -0.075, 0.14, rise), base: carried(anchor, -0.075 + blade.x, 0.14 + blade.y, rise), shoulderAngle };
   }
-  return {pivot, base, shoulderAngle};
+  const pelvis = vector(0.135, -Math.PI/2+pelvisPitch);
+  return { pivot: carried(spine[0], 0, 0), base: carried(spine[0], pelvis.x, pelvis.y) };
+}
+function limbAttachment(phase, front, side, spine, localPhase) {
+  const sway = bodySway(phase);
+  return attachLimb(front, side, spine, front
+    ? { roll: sway.foreRoll, rise: SCAPULA_RISE * sway.foreLoad[side], shoulderAngle: -Math.PI/2 + shoulderCurve(localPhase)[0], width: foreTrack.attachment }
+    : { roll: sway.hindRoll, pelvisPitch: bodyPose(phase).pelvisPitch, width: hindTrack.attachment });
 }
 export function pawCycle(phase, offset = 0, front = true, base) {
   const p = wrap(phase - offset);

@@ -5,7 +5,7 @@ import {TAIL_ROOT} from './tail.js';
 import {headLoops,loopRay,faceRay,castHead,earShell,earHeights} from './head-shape.js';
 const TAU=Math.PI*2,N=16;
 // Head size relative to the proportions drawn in head-shape.js.
-const HEAD_SCALE=1.08;
+export const HEAD_SCALE=1.134;
 const mix=THREE.MathUtils.lerp;
 const between=(a,b,t)=>({x:mix(a.x,b.x,t),y:mix(a.y,b.y,t),z:mix(a.z,b.z,t)});
 const ease=t=>{const u=Math.max(0,Math.min(1,t));return u*u*(3-2*u);};
@@ -17,9 +17,11 @@ const thorax=[
   // fractional vertebra, x offset, y offset, height radius, width radius
   // The croup narrows into the tail root instead of ending in a round cap.
   [0,TAIL_ROOT.x,TAIL_ROOT.y,.080,.076],[0,-.128,.002,.124,.108],[0,-.082,-.030,.178,.146],
-  [0,-.012,-.055,.220,.178],[.38,0,-.062,.240,.194],[.88,0,-.070,.244,.198],
-  [1.41,0,-.074,.236,.194],[1.96,0,-.076,.226,.188],[2.51,0,-.078,.218,.182],
-  [3.08,0,-.082,.220,.180],[3.65,0,-.088,.234,.184],[4.23,0,-.094,.250,.192],
+  // The belly hangs nearly level from the chest back to the groin, with only
+  // a slight tuck-up: the thighs are mostly inside the body's outline.
+  [0,-.012,-.055,.220,.178],[.38,0,-.072,.250,.194],[.88,0,-.090,.264,.198],
+  [1.41,0,-.100,.262,.194],[1.96,0,-.104,.254,.188],[2.51,0,-.104,.244,.182],
+  [3.08,0,-.103,.241,.180],[3.65,0,-.101,.247,.184],[4.23,0,-.099,.255,.192],
   [4.79,0,-.104,.274,.198],[5.28,0,-.108,.286,.202],[5.78,0,-.106,.286,.202],
   [6.22,0,-.096,.266,.196],[6.65,0,-.078,.228,.184],[7.04,0,-.054,.184,.164],
   [7.36,0,-.027,.147,.145]
@@ -40,10 +42,12 @@ const foreLimb=[
 ];
 // The thigh is a flat slab against the pelvis: its last number is the
 // width on the inner side, the one before it the width on the outer side.
+// The hamstrings run from the seat bones to below the knee, so the back of
+// the thigh stays broad almost down to the knee instead of tapering early.
 const hindLimb=[
-  [UPPER,.34,.122,.168,.070,.110],[UPPER,.58,.112,.150,.068,.100],[UPPER,.82,.094,.120,.068,.082],
-  [JOINT,0,.076,.096,.064,.068],
-  [LOWER,.16,.068,.100,.064],[LOWER,.40,.058,.084,.057],[LOWER,.66,.049,.064,.050],[LOWER,.88,.044,.054,.046],
+  [UPPER,.34,.140,.176,.076,.110],[UPPER,.58,.142,.176,.074,.100],[UPPER,.82,.122,.152,.072,.084],
+  [JOINT,0,.086,.112,.066,.068],
+  [LOWER,.16,.068,.108,.064],[LOWER,.40,.058,.088,.057],[LOWER,.66,.049,.064,.050],[LOWER,.88,.044,.054,.046],
   [ANKLE,0,.043,.068,.047],
   [DISTAL,.35,.041,.048,.049],[DISTAL,.78,.041,.051,.056],
   [TOES,0,.041,.052,.062],[TOES,.50,.036,.055,.068],[TOES,1.00,.027,.049,.060],[TOES,1.35,.016,.031,.041],

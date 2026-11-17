@@ -24,18 +24,23 @@ const widths=Array.from({length:TAIL_SEGMENTS+1},(_,i)=>{
   const cap=t<.955?1:Math.sqrt(Math.max(0,1-((t-.955)/.045)**2));
   return [shaft*cap,shaft*cap*.96];
 });
-export function tailPose(phase,spine=spinePose(phase)){
-  const rear=spine[0],points=[{x:rear.x+TAIL_ROOT.x,y:rear.y+TAIL_ROOT.y,z:rear.z??0}];
-  const step=TAIL_LENGTH/TAIL_SEGMENTS;
-  for(let i=0;i<TAIL_SEGMENTS;i++){
-    const s=(i+.5)/TAIL_SEGMENTS,lag=.16*s*s;
-    const [root,tip]=direction(phase-lag);
-    const bend=s*s*(3-2*s);
-    const elevation=root*(1-bend)+tip*bend+.075*Math.sin(Math.PI*s)
-      -.10*bodyPose(phase-lag).pelvisPitch*(1-s);
-    const yaw=.025+.043*s*(root-tip);
-    const p=points[i],h=step*Math.cos(elevation);
-    points.push({x:p.x-h*Math.cos(yaw),y:p.y+step*Math.sin(elevation),z:p.z+h*Math.sin(yaw)});
-  }
-  return {points,radii:widths};
+// A tail driven by its own root/tip elevation curve and the pelvis pitch.
+// Shared by every gait; each gait supplies its own `direction` keys.
+export function makeTail(directionAt,pelvisPitchAt,spineAt){
+  return function(phase,spine=spineAt(phase)){
+    const rear=spine[0],points=[{x:rear.x+TAIL_ROOT.x,y:rear.y+TAIL_ROOT.y,z:rear.z??0}];
+    const step=TAIL_LENGTH/TAIL_SEGMENTS;
+    for(let i=0;i<TAIL_SEGMENTS;i++){
+      const s=(i+.5)/TAIL_SEGMENTS,lag=.16*s*s;
+      const [root,tip]=directionAt(phase-lag);
+      const bend=s*s*(3-2*s);
+      const elevation=root*(1-bend)+tip*bend+.075*Math.sin(Math.PI*s)
+        -.10*pelvisPitchAt(phase-lag)*(1-s);
+      const yaw=.025+.043*s*(root-tip);
+      const p=points[i],h=step*Math.cos(elevation);
+      points.push({x:p.x-h*Math.cos(yaw),y:p.y+step*Math.sin(elevation),z:p.z+h*Math.sin(yaw)});
+    }
+    return {points,radii:widths};
+  };
 }
+export const tailPose=makeTail(direction,phase=>bodyPose(phase).pelvisPitch,spinePose);
